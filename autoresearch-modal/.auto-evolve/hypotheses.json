@@ -1,0 +1,86 @@
+{
+  "batch": 1,
+  "generatedAt": "2026-04-08T13:04:58.871Z",
+  "hypotheses": [
+    {
+      "id": "reduce-batch-size",
+      "title": "Halve total batch size to 2^18",
+      "rationale": "With a fixed 5-minute wall-clock budget, TOTAL_BATCH_SIZE=2^19 yields ~900 gradient steps. Halving to 2^18 doubles the number of optimizer updates while keeping per-step compute similar (same model, same DEVICE_BATCH_SIZE, half the grad_accum_steps). For a 50M-param model that is likely undertrained relative to Chinchilla-optimal token counts, more frequent weight updates should improve val_bpb by letting the optimizer traverse more of the loss landscape.",
+      "risk": "low",
+      "expectedImpact": "medium",
+      "changes": "In train.py, change TOTAL_BATCH_SIZE from 2**19 to 2**18.",
+      "priority": 10,
+      "status": "success"
+    },
+    {
+      "id": "increase-depth-to-10",
+      "title": "Increase DEPTH from 8 to 10",
+      "rationale": "The model is currently 8 layers with dim=512 (~50M params). Increasing to DEPTH=10 gives dim=640, heads=5, roughly ~86M params. On an H100 with 5 minutes, the additional capacity should lower val_bpb if the model is capacity-limited. The compute per step increases but the model can fit more complex patterns in the data distribution. The step count decrease is partially offset by higher per-step learning.",
+      "risk": "medium",
+      "expectedImpact": "large",
+      "changes": "In train.py, change DEPTH from 8 to 10.",
+      "priority": 9,
+      "status": "success"
+    },
+    {
+      "id": "add-warmup",
+      "title": "Add small LR warmup (2%)",
+      "rationale": "WARMUP_RATIO is currently 0.0, meaning the optimizer immediately starts at full learning rate. This can destabilize early training before optimizer momentum buffers are populated, especially for Muon which uses Nesterov momentum. A brief warmup (2% of budget = ~6 seconds) lets momentum and second-moment estimates stabilize, leading to better early gradient signal and potentially lower final val_bpb.",
+      "risk": "low",
+      "expectedImpact": "small",
+      "changes": "In train.py, change WARMUP_RATIO from 0.0 to 0.02.",
+      "priority": 8,
+      "status": "success"
+    },
+    {
+      "id": "swiglu-activation",
+      "title": "Replace ReLU-squared with SwiGLU in MLP",
+      "rationale": "SwiGLU (gated SiLU) consistently outperforms ReLU² in transformer language models across scales (Shazeer 2020, LLaMA). The gating mechanism provides smoother gradients and better feature selection. At equal FLOPs the improvement is typically 1-3% in loss. While this adds a gate projection, the inner dimension can be adjusted to keep param count similar.",
+      "risk": "medium",
+      "expectedImpact": "medium",
+      "changes": "In train.py MLP class: add a gate linear c_gate = nn.Linear(n_embd, 4*n_embd, bias=False). In forward(), compute gate = F.silu(self.c_gate(x)) and up = self.c_fc(x), then x = gate * up before c_proj. Update init_weights to initialize c_gate with the same uniform distribution as c_fc. The 4x inner dim is kept (slight param increase) for simplicity; reducing to 8/3*n_embd is an optional follow-up.",
+      "priority": 7,
+      "status": "pending"
+    },
+    {
+      "id": "reduce-warmdown-ratio",
+      "title": "Reduce warmdown ratio from 0.5 to 0.35",
+      "rationale": "Currently half the training time is spent in LR cooldown (WARMDOWN_RATIO=0.5). This is aggressive and means the model spends only 50% of training at peak learning rate. Reducing to 0.35 gives 65% of training at peak LR, allowing more learning before cooldown begins. The final LR still reaches 0 (FINAL_LR_FRAC=0.0) so convergence is preserved, but more tokens are processed at high LR, which should lower val_bpb.",
+      "risk": "low",
+      "expectedImpact": "small",
+      "changes": "In train.py, change WARMDOWN_RATIO from 0.5 to 0.35.",
+      "priority": 6,
+      "status": "pending"
+    },
+    {
+      "id": "raise-matrix-lr",
+      "title": "Increase Muon matrix LR from 0.04 to 0.06",
+      "rationale": "The Muon optimizer handles all 2D matrix parameters (attention projections, MLP layers). With only 5 minutes of training, a higher matrix learning rate could accelerate convergence. The current LR 0.04 was likely tuned at a different scale; the dmodel_lr_scale correction only applies to AdamW groups. A 50% increase is moderate and within typical Muon LR ranges. If the model is undertrained, faster matrix updates should lower val_bpb.",
+      "risk": "medium",
+      "expectedImpact": "small",
+      "changes": "In train.py, change MATRIX_LR from 0.04 to 0.06.",
+      "priority": 5,
+      "status": "pending"
+    },
+    {
+      "id": "shorter-sliding-window",
+      "title": "Reduce short window from seq/2 to seq/4",
+      "rationale": "The SSSL pattern means 3 out of every 4 layers use a short sliding window (currently seq_len//2 = 1024). Reducing to seq_len//4 = 512 cuts attention FLOPs on those layers roughly in half, increasing tokens/sec and allowing more training steps in the fixed 5-minute budget. The last layer always uses full attention, so long-range information is still captured. The MFU boost from faster steps should translate to more gradient updates and lower val_bpb.",
+      "risk": "low",
+      "expectedImpact": "small",
+      "changes": "In train.py _compute_window_sizes method, change short_window from long_window // 2 to long_window // 4.",
+      "priority": 4,
+      "status": "pending"
+    },
+    {
+      "id": "increase-softcap",
+      "title": "Raise logit soft-capping from 15 to 30",
+      "rationale": "The logit soft-cap of 15 constrains logit magnitudes via tanh(logits/15)*15. This prevents extreme predictions but may also prevent the model from making sufficiently confident predictions on easy tokens, wasting probability mass. Increasing to 30 relaxes this constraint while still providing numerical stability. Gemma 2 uses softcap=30 for similar model scales. Less compression of the logit distribution should reduce val_bpb on tokens the model can confidently predict.",
+      "risk": "low",
+      "expectedImpact": "small",
+      "changes": "In train.py GPT.forward(), change softcap from 15 to 30.",
+      "priority": 3,
+      "status": "pending"
+    }
+  ]
+}

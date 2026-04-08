@@ -1,0 +1,55 @@
+diff --git a/.auto-evolve/best.json b/.auto-evolve/best.json
+index c75524b..3e34d19 100644
+--- a/.auto-evolve/best.json
++++ b/.auto-evolve/best.json
+@@ -1,5 +1,5 @@
+ {
+-  "metric": 0.987462,
+-  "commit": "0793f82",
+-  "timestamp": "2026-04-08T13:11:30.891Z"
++  "metric": 0.986233,
++  "commit": "47d8a15",
++  "timestamp": "2026-04-08T13:37:03.911Z"
+ }
+diff --git a/.auto-evolve/history.jsonl b/.auto-evolve/history.jsonl
+index ad704e4..e6a782d 100644
+--- a/.auto-evolve/history.jsonl
++++ b/.auto-evolve/history.jsonl
+@@ -1,2 +1,3 @@
+ {"id":"baseline","timestamp":"2026-04-08T12:58:23.395Z","hypothesis":"baseline","title":"Initial baseline","baselineMetric":0.995521,"resultMetric":0.995521,"delta":0,"status":"baseline","commitSha":"22a54cf","durationSeconds":371,"description":"Unmodified starting point"}
+ {"id":"cc39329b-57ad-4d07-a97f-889bbee5026d","timestamp":"2026-04-08T13:11:30.892Z","hypothesis":"reduce-batch-size","title":"Halve total batch size to 2^18","baselineMetric":0.995521,"resultMetric":0.987462,"delta":-0.008059000000000038,"status":"kept","commitSha":"0793f82","durationSeconds":392,"description":"Improved val_bpb: 0.995521 → 0.987462"}
++{"id":"73513343-b003-4cc0-b36e-1d4fe4065257","timestamp":"2026-04-08T13:37:03.913Z","hypothesis":"increase-depth-to-10","title":"Increase DEPTH from 8 to 10","baselineMetric":0.995521,"resultMetric":0.986233,"delta":-0.009287999999999963,"status":"kept","commitSha":"47d8a15","durationSeconds":412,"description":"Improved val_bpb: 0.995521 → 0.986233"}
+diff --git a/.auto-evolve/hypotheses.json b/.auto-evolve/hypotheses.json
+index 3d66c47..4b251c5 100644
+--- a/.auto-evolve/hypotheses.json
++++ b/.auto-evolve/hypotheses.json
+@@ -20,7 +20,7 @@
+       "expectedImpact": "large",
+       "changes": "In train.py, change DEPTH from 8 to 10.",
+       "priority": 9,
+-      "status": "in_progress"
++      "status": "success"
+     },
+     {
+       "id": "add-warmup",
+@@ -30,7 +30,7 @@
+       "expectedImpact": "small",
+       "changes": "In train.py, change WARMUP_RATIO from 0.0 to 0.02.",
+       "priority": 8,
+-      "status": "pending"
++      "status": "in_progress"
+     },
+     {
+       "id": "swiglu-activation",
+diff --git a/train.py b/train.py
+index 2d3f8aa..57acefd 100644
+--- a/train.py
++++ b/train.py
+@@ -452,7 +452,7 @@ MATRIX_LR = 0.04        # learning rate for matrix parameters (Muon)
+ SCALAR_LR = 0.5         # learning rate for per-layer scalars (Adam)
+ WEIGHT_DECAY = 0.2      # cautious weight decay for Muon
+ ADAM_BETAS = (0.8, 0.95) # Adam beta1, beta2
+-WARMUP_RATIO = 0.0      # fraction of time budget for LR warmup
++WARMUP_RATIO = 0.02     # fraction of time budget for LR warmup
+ WARMDOWN_RATIO = 0.5    # fraction of time budget for LR warmdown
+ FINAL_LR_FRAC = 0.0     # final LR as fraction of initial

@@ -1,0 +1,52 @@
+# Auto-Evolve CLI — justfile
+
+# List available recipes
+default:
+    @just --list
+
+# Run CLI in dev mode without building (pass args after --)
+dev *args:
+    bun run src/index.ts {{ args }}
+
+# Compile src/index.ts -> dist/index.js
+build:
+    bun build src/index.ts --outdir dist --target bun
+
+# Build and register `auto-evolve` as a global command
+install: build
+    bun link
+
+# Run all tests (vitest)
+test:
+    bun run test
+
+# Run tests in watch mode
+test-watch:
+    bun run test:watch
+
+# Run oxlint
+lint:
+    bun run lint
+
+# Run oxlint with auto-fix
+lint-fix:
+    bun run lint:fix
+
+# Format code with oxfmt
+format:
+    bun run format
+
+# Check formatting without writing
+format-check:
+    bun run format:check
+
+# Type check with tsc
+typecheck:
+    bun run typecheck
+
+# Run lint + format-check + typecheck + test
+check:
+    just lint
+    just format-check
+    just typecheck
+    just test

@@ -1,0 +1,25 @@
+.claude/
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
+dist/
+.turbo/
+
+# Python
+__pycache__/
+*.py[oc]
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Bun (binary lockfile, legacy — text-based bun.lock is tracked)
+*.lockb
+
+# Modal
+.modal/

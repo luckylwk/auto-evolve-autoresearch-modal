@@ -1,0 +1,27 @@
+# Autoresearch - autonomous pretraining research swarm
+
+# Install dependencies
+install:
+    uv sync
+
+# Deploy Modal app
+deploy:
+    modal deploy modal_app.py
+
+# Run training on Modal H100
+train:
+    uv run python modal_runner.py
+
+# Format code with ruff
+format:
+    uvx ruff format .
+    uvx ruff check --fix .
+
+# Check formatting (no changes)
+format-check:
+    uvx ruff format --check .
+    uvx ruff check .
+
+# Download data and train tokenizer (for priming Modal volume)
+prepare num_shards="2":
+    uv run python prepare.py --num-shards {{ num_shards }}

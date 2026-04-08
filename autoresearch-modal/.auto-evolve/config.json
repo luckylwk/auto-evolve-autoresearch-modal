@@ -1,0 +1,11 @@
+{
+  "agentCommand": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "maxHypothesesPerBatch": 8,
+  "timeoutSeconds": 600,
+  "branchPrefix": "autoloop",
+  "autoRehypothesizeEvery": 5,
+  "maxConsecutiveFailures": 10,
+  "simplicityBias": true,
+  "logLlmCalls": true
+}

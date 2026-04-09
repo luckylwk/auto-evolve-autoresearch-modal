@@ -70,7 +70,7 @@
       "expectedImpact": "small",
       "changes": "In train.py _compute_window_sizes method, change short_window from long_window // 2 to long_window // 4.",
       "priority": 4,
-      "status": "in_progress"
+      "status": "success"
     },
     {
       "id": "increase-softcap",

@@ -40,7 +40,7 @@
       "expectedImpact": "medium",
       "changes": "In train.py MLP class: add a gate linear c_gate = nn.Linear(n_embd, 4*n_embd, bias=False). In forward(), compute gate = F.silu(self.c_gate(x)) and up = self.c_fc(x), then x = gate * up before c_proj. Update init_weights to initialize c_gate with the same uniform distribution as c_fc. The 4x inner dim is kept (slight param increase) for simplicity; reducing to 8/3*n_embd is an optional follow-up.",
       "priority": 7,
-      "status": "pending"
+      "status": "crash"
     },
     {
       "id": "reduce-warmdown-ratio",
@@ -50,7 +50,7 @@
       "expectedImpact": "small",
       "changes": "In train.py, change WARMDOWN_RATIO from 0.5 to 0.35.",
       "priority": 6,
-      "status": "pending"
+      "status": "crash"
     },
     {
       "id": "raise-matrix-lr",
@@ -60,7 +60,7 @@
       "expectedImpact": "small",
       "changes": "In train.py, change MATRIX_LR from 0.04 to 0.06.",
       "priority": 5,
-      "status": "pending"
+      "status": "failed"
     },
     {
       "id": "shorter-sliding-window",
@@ -70,7 +70,7 @@
       "expectedImpact": "small",
       "changes": "In train.py _compute_window_sizes method, change short_window from long_window // 2 to long_window // 4.",
       "priority": 4,
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "increase-softcap",
